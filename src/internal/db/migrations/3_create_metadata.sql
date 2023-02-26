@@ -1,0 +1,4 @@
+CREATE TABLE "Metadata" (
+  "Key" TEXT NOT NULL UNIQUE,
+  "Value" BLOB NOT NULL
+);
