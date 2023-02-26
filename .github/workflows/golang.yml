@@ -1,0 +1,61 @@
+name: Golang
+on:
+  push:
+    branches: [main]
+  pull_request: {}
+  workflow_dispatch: {}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.20.x
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Download Dependencies
+        run: go mod download
+      - name: Test
+        run: |-
+          GOLANG_TEST_FLAGS="-v -json -timeout 2m" make test
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
+    needs: test
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.20.x
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Download Dependencies
+        run: go mod download
+      - name: Build
+        run: make build
+  formatting:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
+    needs: test
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.20.x
+      - name: Checkout Source
+        uses: actions/checkout@v2
+      - name: Check Formatting
+        run: |-
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "Files are not properly formatted"
+            gofmt -s -l .
+            exit 1
+          fi
