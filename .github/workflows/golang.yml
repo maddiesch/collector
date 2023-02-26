@@ -12,11 +12,11 @@ jobs:
         working-directory: ./src
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.20.x
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Download Dependencies
         run: go mod download
       - name: Test
@@ -30,11 +30,11 @@ jobs:
     needs: test
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.20.x
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Download Dependencies
         run: go mod download
       - name: Build
@@ -44,14 +44,13 @@ jobs:
     defaults:
       run:
         working-directory: ./src
-    needs: test
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.20.x
       - name: Checkout Source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Check Formatting
         run: |-
           if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
@@ -59,3 +58,24 @@ jobs:
             gofmt -s -l .
             exit 1
           fi
+  coverage:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
+    needs: test
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20.x
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download Dependencies
+        run: go mod download
+      - name: Run Coverage
+        run: make tmp/coverage.out
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: src/tmp/coverage.out
