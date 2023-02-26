@@ -5,10 +5,11 @@ GOLANG := go
 GOLANG_TEST_FLAGS ?= -v
 GOLANG_TEST_RUN ?= .
 GOLANG_TEST_PATH ?= ./...
+GOLANG_TEST_TIMEOUT ?= 30s
 
 .PHONY: test
 test:
-	${GOLANG} test ${GOLANG_TEST_FLAGS} -run ${GOLANG_TEST_RUN} ${GOLANG_TEST_PATH}
+	${GOLANG} test ${GOLANG_TEST_FLAGS} -run ${GOLANG_TEST_RUN} ${GOLANG_TEST_PATH} -timeout ${GOLANG_TEST_TIMEOUT}
 
 GO_FILES := $(shell find ${ROOT_DIR} -type f -name '*.go' -not -name '*_test.go')
 GO_TEST_FILES := $(shell find ${ROOT_DIR} -type f -name '*_test.go')
