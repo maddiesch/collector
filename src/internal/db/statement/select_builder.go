@@ -1,6 +1,7 @@
 package statement
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/maddiesch/collector/internal/db/statement/conditional"
@@ -16,6 +17,20 @@ type SelectBuilder struct {
 	columns    []string
 	where      conditional.Conditional
 	limit      *int64
+	orderBy    []OrderBy
+}
+
+type OrderBy struct {
+	Column    string
+	Ascending bool
+}
+
+func (o OrderBy) String() string {
+	key := "DESC"
+	if o.Ascending {
+		key = "ASC"
+	}
+	return fmt.Sprintf("%s %s", dialect.Identifier(o.Column), key)
 }
 
 func Select(columns ...string) *SelectBuilder {
@@ -44,6 +59,15 @@ func (b *SelectBuilder) Where(condition conditional.Conditional) *SelectBuilder 
 
 func (b *SelectBuilder) Limit(l int64) *SelectBuilder {
 	b.limit = lo.ToPtr(l)
+
+	return b
+}
+
+func (b *SelectBuilder) OrderBy(col string, asc bool) *SelectBuilder {
+	b.orderBy = append(b.orderBy, OrderBy{
+		Column:    col,
+		Ascending: asc,
+	})
 
 	return b
 }
@@ -82,6 +106,13 @@ func (b *SelectBuilder) Generate() (string, []any, error) {
 
 	if b.limit != nil {
 		query.WriteStringf(" LIMIT %d", lo.FromPtr(b.limit))
+	}
+
+	if len(b.orderBy) > 0 {
+		order := strings.Join(lo.Map(b.orderBy, func(o OrderBy, _ int) string {
+			return o.String()
+		}), ", ")
+		query.WriteStringf(" ORDER BY %s", order)
 	}
 
 	return query.String(), args, nil

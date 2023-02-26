@@ -1,8 +1,11 @@
 package ports
 
-import "context"
+import (
+	"context"
+
+	"github.com/maddiesch/collector/internal/core/domain"
+)
 
 type ExpansionNameProvider interface {
-	// Return a single expansion name with an optional card name.
-	ProvideExpansionName(context.Context, string) (string, error)
+	ProvideExpansionName(context.Context, *domain.CardPicker) error
 }

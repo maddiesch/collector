@@ -7,4 +7,6 @@ type CardNameRepository interface {
 	//
 	// You can also pass an optional expansion set name
 	CardNameSearchPrefix(context.Context, string, string) ([]string, error)
+
+	CardNameExists(context.Context, string, string) (bool, error)
 }

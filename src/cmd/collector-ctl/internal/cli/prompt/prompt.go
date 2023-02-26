@@ -15,20 +15,21 @@ type Prompt struct {
 func (p *Prompt) TryAgain(warning string) bool {
 	color.Warn.Println(warning)
 
+	return p.Confirm("Would you like to try again?", true)
+}
+
+func (p *Prompt) Confirm(message string, defaultValue bool) (retry bool) {
 	question := &survey.Confirm{
-		Message: "Would you like to try again?",
-		Default: true,
+		Message: message,
+		Default: defaultValue,
 		Help:    "If you don't know what to do, just press enter.",
 	}
 
-	var retry bool
-
 	if err := survey.AskOne(question, &retry); err != nil {
-		color.Error.Printf("Failed to ask for retry with error: %s\n", err.Error())
+		color.Error.Printf("Failed to confirm with error: %s\n", err.Error())
 		return false
 	}
-
-	return retry
+	return
 }
 
 var (

@@ -5,7 +5,9 @@ import (
 
 	"github.com/maddiesch/collector/internal/core/domain"
 	"github.com/maddiesch/collector/internal/core/ports"
+	"github.com/maddiesch/collector/internal/db"
 	"github.com/maddiesch/collector/internal/db/statement"
+	"github.com/maddiesch/collector/internal/db/statement/conditional"
 )
 
 func (d *Database) InsertCardData(ctx context.Context, data domain.CardData) error {
@@ -31,6 +33,30 @@ func (d *Database) InsertCardData(ctx context.Context, data domain.CardData) err
 
 func (d *Database) FlushCardData(ctx context.Context) error {
 	return d.conn.ExecStatement(ctx, statement.Delete().From("Cache_DefaultCard"))
+}
+
+func (d *Database) GetCardData(ctx context.Context, cardName, expansionName, collectorNumber string) ([]domain.CardData, error) {
+	where := conditional.And(
+		conditional.Equal("Name", cardName),
+		conditional.And(
+			conditional.Equal("SetName", expansionName),
+			conditional.Equal("CollectorNumber", collectorNumber),
+		),
+	)
+
+	stmt := statement.Select().From("Cache_DefaultCard").Where(where)
+
+	var results []domain.CardData
+
+	err := d.conn.EachRow(ctx, stmt, func(row *db.ResultRow) error {
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 var _ ports.CardDataRepository = (*Database)(nil)

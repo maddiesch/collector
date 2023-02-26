@@ -60,6 +60,24 @@ func (c *Conn) QueryStatement(ctx context.Context, statement generator.Generator
 	return c.QueryContext(ctx, query, args...)
 }
 
+type ResultRow struct {
+	*sql.Rows
+}
+
+func (c *Conn) EachRow(ctx context.Context, statement generator.Generator, fn func(*ResultRow) error) error {
+	rows, err := c.QueryStatement(ctx, statement)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+		err = fn(&ResultRow{rows})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *Conn) QueryStatementRow(ctx context.Context, statement generator.Generator) *sql.Row {
 	query, args, err := statement.Generate()
 	if err != nil {

@@ -12,4 +12,7 @@ type ExpansionNameRepository interface {
 	//
 	// This should be an exact match
 	ExpansionNameExists(context.Context, string) (bool, error)
+
+	// Returns unique names of expansions the given card name has
+	ExpansionNameForCard(context.Context, string) ([]string, error)
 }

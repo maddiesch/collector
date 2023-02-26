@@ -15,6 +15,10 @@ GO_TEST_FILES := $(shell find ${ROOT_DIR} -type f -name '*_test.go')
 
 SQL_FILES := $(shell find ${ROOT_DIR} -type f -name '*.sql')
 
+tmp/coverage.out: ${GO_FILES} ${GO_TEST_FILES} ${ROOT_DIR}/go.mod ${ROOT_DIR}/go.sum
+	@mkdir -p tmp
+	${GOLANG} test -race -covermode=atomic -coverprofile=$@ ./...
+
 bin/collector-ctl: ${GO_FILES} ${SQL_FILES} ${ROOT_DIR}/go.mod ${ROOT_DIR}/go.sum
 	${GOLANG} build -o ${ROOT_DIR}/$@ ./cmd/collector-ctl
 

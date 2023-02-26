@@ -3,6 +3,7 @@ package scryfall
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/maddiesch/collector/internal/core/domain"
@@ -23,6 +24,10 @@ func (s *BulkDataEndpoint) GetBulkDataEndpoint(ctx context.Context) ([]domain.Bu
 	if err != nil {
 		return nil, err
 	}
+	if response.StatusCode != 200 {
+		return nil, fmt.Errorf("invalid status code: %d", response.StatusCode)
+	}
+
 	defer response.Body.Close()
 
 	body := struct {

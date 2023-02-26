@@ -15,7 +15,7 @@ func (d *Database) CardNameSearchPrefix(ctx context.Context, prefix string, expa
 		where = conditional.And(where, conditional.Equal("SetName", expansion))
 	}
 
-	stmt := statement.Select("Name").Distinct().From("Cache_DefaultCard").Where(where)
+	stmt := statement.Select("Name").Distinct().From("Cache_DefaultCard").Where(where).OrderBy("SetName", true)
 
 	rows, err := d.conn.QueryStatement(ctx, stmt)
 	if err != nil {
@@ -33,6 +33,24 @@ func (d *Database) CardNameSearchPrefix(ctx context.Context, prefix string, expa
 	}
 
 	return names, nil
+}
+
+func (d *Database) CardNameExists(ctx context.Context, name string, expansion string) (bool, error) {
+	where := conditional.Equal("Name", name)
+	if expansion != "" {
+		where = conditional.And(where, conditional.Equal("SetName", expansion))
+	}
+
+	stmt := statement.Exists(
+		statement.Select("1").From("Cache_DefaultCard").Where(where),
+	)
+
+	var exists bool
+	if err := d.conn.QueryStatementRow(ctx, stmt).Scan(&exists); err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }
 
 var _ ports.CardNameRepository = (*Database)(nil)
