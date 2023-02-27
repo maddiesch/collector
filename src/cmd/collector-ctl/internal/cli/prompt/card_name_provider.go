@@ -27,7 +27,7 @@ Retry:
 	}
 
 	if picker.CardName == "" {
-		color.Warn.Println("Please input a card name\n")
+		color.Warn.Print("Please input a card name\n\n")
 		goto Retry
 	}
 
