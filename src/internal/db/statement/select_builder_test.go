@@ -38,4 +38,20 @@ func TestSelectBuilder(t *testing.T) {
 
 		assert.Equal(t, `SELECT DISTINCT * FROM "TestTable" LIMIT 1;`, query)
 	})
+
+	t.Run("with a single order", func(t *testing.T) {
+		query, _, err := statement.Select().Distinct().From("TestTable").OrderBy("Foo", true).Generate()
+
+		require.NoError(t, err)
+
+		assert.Equal(t, `SELECT DISTINCT * FROM "TestTable" ORDER BY "Foo" ASC;`, query)
+	})
+
+	t.Run("with multi-order", func(t *testing.T) {
+		query, _, err := statement.Select().Distinct().From("TestTable").OrderBy("Foo", true).OrderBy("Bar", false).Generate()
+
+		require.NoError(t, err)
+
+		assert.Equal(t, `SELECT DISTINCT * FROM "TestTable" ORDER BY "Foo" ASC, "Bar" DESC;`, query)
+	})
 }
