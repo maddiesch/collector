@@ -2,11 +2,13 @@ package statement
 
 import (
 	"database/sql"
+	"sort"
 	"strings"
 
 	"github.com/maddiesch/collector/internal/db/statement/dialect"
 	"github.com/maddiesch/collector/internal/db/statement/generator"
 	"github.com/maddiesch/collector/internal/db/statement/query"
+	"github.com/samber/lo"
 )
 
 type InsertValue struct {
@@ -69,11 +71,14 @@ func (b *InsertBuilder) Generate() (string, []any, error) {
 	} else {
 		var columns, values []string
 
-		for column, value := range b.values {
+		sortedColumns := lo.Keys(b.values)
+		sort.Strings(sortedColumns)
+
+		for _, column := range sortedColumns {
 			vName := provider.Next()
 			columns = append(columns, dialect.Identifier(column))
 			values = append(values, "$"+vName)
-			args = append(args, sql.Named(vName, value))
+			args = append(args, sql.Named(vName, b.values[column]))
 		}
 
 		query.WriteStringf("(%s) VALUES (%s)", strings.Join(columns, ", "), strings.Join(values, ", "))

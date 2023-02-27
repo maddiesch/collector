@@ -18,11 +18,11 @@ func TestInsertBuilder(t *testing.T) {
 
 		require.NoError(t, err)
 
-		assert.Equal(t, `INSERT INTO "TestTable" ("Name", "Age") VALUES ($v1, $v2);`, query)
+		assert.Equal(t, `INSERT INTO "TestTable" ("Age", "Name") VALUES ($v1, $v2);`, query)
 
 		if assert.Len(t, args, 2) {
-			assert.Equal(t, sql.Named("v1", "MTG"), args[0])
-			assert.Equal(t, sql.Named("v2", 30), args[1])
+			assert.Equal(t, sql.Named("v1", 30), args[0])
+			assert.Equal(t, sql.Named("v2", "MTG"), args[1])
 		}
 	})
 
@@ -34,11 +34,11 @@ func TestInsertBuilder(t *testing.T) {
 
 		require.NoError(t, err)
 
-		assert.Equal(t, `INSERT OR REPLACE INTO "TestTable" ("Name", "Age") VALUES ($v1, $v2);`, query)
+		assert.Equal(t, `INSERT OR REPLACE INTO "TestTable" ("Age", "Name") VALUES ($v1, $v2);`, query)
 
 		if assert.Len(t, args, 2) {
-			assert.Equal(t, sql.Named("v1", "MTG"), args[0])
-			assert.Equal(t, sql.Named("v2", 30), args[1])
+			assert.Equal(t, sql.Named("v1", 30), args[0])
+			assert.Equal(t, sql.Named("v2", "MTG"), args[1])
 		}
 	})
 

@@ -20,11 +20,10 @@ func (p *Prompt) ProvideLanguage(ctx context.Context, picker *domain.CardPicker)
 		return ErrResultNotFound
 	}
 
-	names := sort.StringSlice(
-		lo.Map(cards, func(card domain.CardData, _ int) string {
-			return lang.DisplayNameForTagString(card.LanguageTag)
-		}),
-	)
+	names := lo.Map(cards, func(card domain.CardData, _ int) string {
+		return lang.DisplayNameForTagString(card.LanguageTag)
+	})
+	sort.Strings(names)
 
 	switch len(names) {
 	case 0:
