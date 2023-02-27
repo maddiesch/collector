@@ -33,7 +33,7 @@ jobs:
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
       - name: Test
         run: |-
-          GOLANG_TEST_TIMEOUT=5m make test
+          GOLANG_TEST_TIMEOUT=5m GOLANG_TEST_FLAGS="-v -count 1" make test
   build:
     runs-on: ubuntu-latest
     defaults:
