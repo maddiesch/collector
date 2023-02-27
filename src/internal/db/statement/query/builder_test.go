@@ -14,4 +14,12 @@ func TestBuilder(t *testing.T) {
 
 		assert.Equal(t, "Foo;", b.String())
 	})
+
+	t.Run("WriteStringf", func(t *testing.T) {
+		var b Builder
+
+		b.WriteStringf("Foo %s", "Bar")
+
+		assert.Equal(t, "Foo Bar;", b.String())
+	})
 }

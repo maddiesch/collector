@@ -5,7 +5,6 @@ go 1.20
 require (
 	cloud.google.com/go v0.110.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/color v1.14.1
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/mattn/go-sqlite3 v1.14.16
@@ -19,6 +18,7 @@ require (
 )
 
 require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect

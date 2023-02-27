@@ -31,6 +31,13 @@ func (c *Conn) Transaction(ctx context.Context, fn func(*Tx) error) error {
 		return err
 	}
 
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		}
+	}()
+
 	if err := fn(&Tx{tx}); err != nil {
 		if err := tx.Rollback(); err != nil {
 			log.Printf("transaction rollback failure: %v", err)
