@@ -8,4 +8,6 @@ import (
 
 type CollectionRepository interface {
 	InsertCollectedCard(context.Context, domain.CollectedCard) error
+
+	GetCollectedCards(context.Context, string) ([]domain.CollectedCard, error)
 }

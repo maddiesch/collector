@@ -1,14 +1,54 @@
 package statement_test
 
-/**
+import (
+	"database/sql"
+	"testing"
 
-func TestInsert(t *testing.T) {
-	query, args, err := statement.Insert().Into("People").Value("FirstName", "Foo").Value("LastName", "Bar").Generate()
+	"github.com/maddiesch/collector/internal/db/statement"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
 
-	require.NoError(t, err)
+func TestInsertBuilder(t *testing.T) {
+	t.Run("simple insert", func(t *testing.T) {
+		query, args, err := statement.Insert().Into("TestTable").ValueMap(map[string]any{
+			"Name": "MTG",
+			"Age":  30,
+		}).Generate()
 
-	spew.Dump(query)
-	spew.Dump(args)
+		require.NoError(t, err)
+
+		assert.Equal(t, `INSERT INTO "TestTable" ("Name", "Age") VALUES ($v1, $v2);`, query)
+
+		if assert.Len(t, args, 2) {
+			assert.Equal(t, sql.Named("v1", "MTG"), args[0])
+			assert.Equal(t, sql.Named("v2", 30), args[1])
+		}
+	})
+
+	t.Run("insert or replace", func(t *testing.T) {
+		query, args, err := statement.Insert().OrReplace().Into("TestTable").ValueMap(map[string]any{
+			"Name": "MTG",
+			"Age":  30,
+		}).Generate()
+
+		require.NoError(t, err)
+
+		assert.Equal(t, `INSERT OR REPLACE INTO "TestTable" ("Name", "Age") VALUES ($v1, $v2);`, query)
+
+		if assert.Len(t, args, 2) {
+			assert.Equal(t, sql.Named("v1", "MTG"), args[0])
+			assert.Equal(t, sql.Named("v2", 30), args[1])
+		}
+	})
+
+	t.Run("no values", func(t *testing.T) {
+		query, args, err := statement.Insert().Into("TestTable").Generate()
+
+		require.NoError(t, err)
+
+		assert.Equal(t, `INSERT INTO "TestTable" DEFAULT VALUES;`, query)
+
+		assert.Len(t, args, 0)
+	})
 }
-
-*/

@@ -116,6 +116,7 @@ func newAddCommand(config config.Config) *cobra.Command {
 				save, finish := addCardCompleteAction(p)
 				if save {
 					collect := domain.CollectedCard{
+						ID:              ulid.Make().String(),
 						GroupName:       picker.GroupName,
 						Name:            card.Name,
 						SetName:         card.SetName,
@@ -124,6 +125,7 @@ func newAddCommand(config config.Config) *cobra.Command {
 						Condition:       picker.CardCondition,
 						Language:        picker.Language,
 						CreatedAt:       time.Now(),
+						UpdatedAt:       time.Now(),
 					}
 
 					if err := config.DB.InsertCollectedCard(cmd.Context(), collect); err != nil {

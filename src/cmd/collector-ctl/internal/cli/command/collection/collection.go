@@ -13,6 +13,7 @@ func New(config config.Config) *cobra.Command {
 	}
 
 	cmd.AddCommand(newAddCommand(config))
+	cmd.AddCommand(newExportCommand(config))
 
 	return cmd
 }

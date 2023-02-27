@@ -17,6 +17,7 @@ func TestCollectionRepository(t *testing.T) {
 		defer db.Close()
 
 		err := db.InsertCollectedCard(context.Background(), domain.CollectedCard{
+			ID:              "01GT8GYZ4K1B6M9TJC1VPBK3FD",
 			GroupName:       "TestGroup",
 			Name:            "Mountain",
 			SetName:         "Phyrexia: All Will Be One",
@@ -25,6 +26,7 @@ func TestCollectionRepository(t *testing.T) {
 			Language:        "English",
 			Condition:       domain.CardConditionMint,
 			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
 		})
 
 		assert.NoError(t, err)

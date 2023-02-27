@@ -1,4 +1,5 @@
 CREATE TABLE "Inventory" (
+  "ID" TEXT PRIMARY KEY NOT NULL UNIQUE,
   "GroupName" TEXT NOT NULL,
   "Name" TEXT NOT NULL,
   "SetName" TEXT NOT NULL,
@@ -6,7 +7,8 @@ CREATE TABLE "Inventory" (
   "IsFoil" INTEGER NOT NULL,
   "Condition" TEXT NOT NULL,
   "Language" TEXT NOT NULL,
-  "CreatedAt" INTEGER NOT NULL
+  "CreatedAt" INTEGER NOT NULL,
+  "UpdatedAt" INTEGER NOT NULL
 );
 
 CREATE INDEX "Index_Inventory_GroupName" ON "Inventory" ("GroupName");
