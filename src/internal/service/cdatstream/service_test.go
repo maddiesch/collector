@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/maddiesch/collector/internal/core/domain"
 	"github.com/maddiesch/collector/internal/test/stubbed"
 	"github.com/stretchr/testify/assert"
@@ -27,6 +28,7 @@ func TestStreamCardData(t *testing.T) {
 		case error:
 			require.NoError(t, event)
 		case domain.CardData:
+			spew.Dump(event)
 			count++
 		default:
 			require.FailNowf(t, "Invalid event type", "Type: %T", event)

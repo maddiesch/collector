@@ -3,7 +3,9 @@ package validate
 import (
 	"context"
 
+	"github.com/maddiesch/collector/internal/core/domain"
 	"github.com/maddiesch/collector/internal/core/ports"
+	"github.com/samber/lo"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -29,6 +31,10 @@ func New(in NewInput) ports.ValidationService {
 
 		r, _ = in.CardNameExists(ctx, fl.Field().String(), expansion.String())
 		return
+	})
+
+	val.RegisterValidationCtx("card_condition", func(ctx context.Context, fl validator.FieldLevel) bool {
+		return lo.Contains(domain.CardConditionAllString, fl.Field().String())
 	})
 
 	return &validate{

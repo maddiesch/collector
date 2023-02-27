@@ -16,7 +16,7 @@ func (d *Database) InsertCardData(ctx context.Context, data domain.CardData) err
 		"Name":            data.Name,
 		"SetName":         data.SetName,
 		"CollectorNumber": data.CollectorNumber,
-		"Language":        data.Language,
+		"Language":        data.LanguageTag,
 		"ReleasedAt":      data.ReleasedAt,
 		"ImageSmallURL":   data.Image.Small,
 		"ImageNormalURL":  data.Image.Normal,
@@ -49,6 +49,40 @@ func (d *Database) GetCardData(ctx context.Context, cardName, expansionName, col
 	var results []domain.CardData
 
 	err := d.conn.EachRow(ctx, stmt, func(row *db.ResultRow) error {
+		mapped, err := row.ReadMap()
+		if err != nil {
+			return err
+		}
+
+		var releasedAt domain.ReleaseDate
+
+		if err := releasedAt.Scan(mapped["ReleasedAt"]); err != nil {
+			return err
+		}
+
+		results = append(results, domain.CardData{
+			ID:              mapped["ScryfallID"].(string),
+			Name:            mapped["Name"].(string),
+			SetName:         mapped["SetName"].(string),
+			LanguageTag:     mapped["Language"].(string),
+			CollectorNumber: mapped["CollectorNumber"].(string),
+			ReleasedAt:      releasedAt,
+			ManaCost:        mapped["ManaCost"].(string),
+			HasFoil:         mapped["HasFoil"].(int64) == 1,
+			HasNormal:       mapped["HasNormal"].(int64) == 1,
+			Image: domain.CardDataImage{
+				Small:  mapped["ImageSmallURL"].(string),
+				Normal: mapped["ImageNormalURL"].(string),
+			},
+			Links: domain.CardDataLink{
+				Gatherer: mapped["GathererURL"].(string),
+			},
+			Prices: domain.CardDataPrice{
+				NormalUSD: int(mapped["PriceNormalUSD"].(int64)),
+				FoilUSD:   int(mapped["PriceFoilUSD"].(int64)),
+			},
+		})
+
 		return nil
 	})
 

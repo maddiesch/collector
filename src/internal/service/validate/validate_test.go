@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/maddiesch/collector/internal/core/domain"
 	"github.com/maddiesch/collector/internal/core/ports"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
@@ -39,6 +40,18 @@ func TestCustomValidation(t *testing.T) {
 				Expansion string `validate:"required,default_card_expansion"`
 				Name      string `validate:"required,default_card_name=Expansion"`
 			}{"Phyrexia: All Will Be One", "Mountain"}
+
+			err := validate.Struct(object)
+
+			assert.NoError(t, err)
+		})
+	})
+
+	t.Run("card_condition", func(t *testing.T) {
+		t.Run("given a valid condition", func(t *testing.T) {
+			object := struct {
+				Condition domain.CardCondition `validate:"required,card_condition"`
+			}{domain.CardConditionGood}
 
 			err := validate.Struct(object)
 

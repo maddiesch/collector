@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/maddiesch/collector/cmd/collector-ctl/internal/cli/color"
 	"github.com/maddiesch/collector/internal/core/domain"
 	"github.com/maddiesch/collector/internal/core/ports"
 )
@@ -23,6 +24,11 @@ func (p *Prompt) ProvideCardName(ctx context.Context, picker *domain.CardPicker)
 Retry:
 	if err := survey.AskOne(input, &picker.CardName); err != nil {
 		return err
+	}
+
+	if picker.CardName == "" {
+		color.Warn.Println("Please input a card name\n")
+		goto Retry
 	}
 
 	if found, err := p.CardNameExists(ctx, picker.CardName, picker.ExpansionName); err != nil {

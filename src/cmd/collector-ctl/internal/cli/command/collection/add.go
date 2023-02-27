@@ -86,15 +86,31 @@ func newAddCommand(config config.Config) *cobra.Command {
 					return err
 				}
 
+				err = p.ProvideCardCondition(cmd.Context(), picker)
+				if err != nil {
+					color.Error.Printf("Failed to select a condition with error: %s\n", err)
+					return err
+				}
+
+				err = p.ProvideLanguage(cmd.Context(), picker)
+				if err != nil {
+					color.Error.Printf("Failed to select a language with error: %s\n", err)
+					return err
+				}
+
 				if err := validate.Struct(picker); err != nil {
 					return err
 				}
 
-				spew.Dump(picker)
+				card, err := p.ProvideCardDataFromPicker(cmd.Context(), picker)
+				if err != nil {
+					return err
+				}
 
 				save, finish := addCardCompleteAction(p)
 				if save {
-					// TODO: Save the card
+					spew.Dump(card)
+
 					fmt.Println("TODO: Save the card")
 				}
 				if finish {

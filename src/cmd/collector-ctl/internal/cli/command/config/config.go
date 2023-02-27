@@ -13,6 +13,9 @@ type Config struct {
 }
 
 func (c Config) Shutdown(ctx context.Context) error {
+	if err := c.DB.Cleanup(ctx); err != nil {
+		color.Warn.Printf("Database cleanup failed: %s\n", err)
+	}
 	if err := c.DB.Close(); err != nil {
 		color.Warn.Printf("Close Database Error: %s\n", err)
 	}

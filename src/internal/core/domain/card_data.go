@@ -1,17 +1,20 @@
 package domain
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"strconv"
+
+	"cloud.google.com/go/civil"
 )
 
 type CardData struct {
 	ID              string        `json:"id"`
 	Name            string        `json:"name"`
 	SetName         string        `json:"set_name"`
-	Language        string        `json:"lang"`
+	LanguageTag     string        `json:"lang"`
 	CollectorNumber string        `json:"collector_number"`
-	ReleasedAt      string        `json:"released_at"`
+	ReleasedAt      ReleaseDate   `json:"released_at"`
 	ManaCost        string        `json:"mana_cost"`
 	HasFoil         bool          `json:"foil"`
 	HasNormal       bool          `json:"nonfoil"`
@@ -30,8 +33,8 @@ type CardDataLink struct {
 }
 
 type CardDataPrice struct {
-	NormalUSD int32
-	FoilUSD   int32
+	NormalUSD int
+	FoilUSD   int
 }
 
 func (c *CardDataPrice) UnmarshalJSON(data []byte) error {
@@ -43,16 +46,50 @@ func (c *CardDataPrice) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	parse := func(s string) (int32, error) {
+	parse := func(s string) (int, error) {
 		value, err := strconv.ParseFloat(price.USD, 32)
 		if err != nil {
 			return 0, err
 		}
-		return int32(value * 100), nil
+		return int(value * 100), nil
 	}
 
 	c.NormalUSD, _ = parse(price.USD)
 	c.FoilUSD, _ = parse(price.USDFoil)
 
 	return nil
+}
+
+type ReleaseDate civil.Date
+
+func (r *ReleaseDate) UnmarshalJSON(data []byte) error {
+	var d civil.Date
+
+	if err := json.Unmarshal(data, &d); err != nil {
+		return err
+	}
+
+	*r = ReleaseDate(d)
+
+	return nil
+}
+
+func (r *ReleaseDate) Scan(src any) error {
+	srcStr, ok := src.(string)
+	if !ok {
+		return driver.ErrBadConn
+	}
+
+	d, err := civil.ParseDate(srcStr)
+	if err != nil {
+		return err
+	}
+
+	*r = ReleaseDate(d)
+
+	return nil
+}
+
+func (r ReleaseDate) Value() (driver.Value, error) {
+	return civil.Date(r).String(), nil
 }

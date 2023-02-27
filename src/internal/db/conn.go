@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"net/url"
 	"strings"
 
 	"github.com/maddiesch/collector/internal/db/statement"
@@ -64,17 +65,24 @@ type ResultRow struct {
 	*sql.Rows
 }
 
+func (r *ResultRow) ReadMap() (map[string]any, error) {
+	return ScanRowMap(r.Rows)
+}
+
 func (c *Conn) EachRow(ctx context.Context, statement generator.Generator, fn func(*ResultRow) error) error {
 	rows, err := c.QueryStatement(ctx, statement)
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
+
 	for rows.Next() {
 		err = fn(&ResultRow{rows})
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -121,11 +129,21 @@ func (t *Tx) QueryStatementRow(ctx context.Context, statement generator.Generato
 }
 
 type NewConnInput struct {
-	FilePath string
+	FilePath     string
+	IsMemoryMode bool
 }
 
 func NewConn(ctx context.Context, in NewConnInput) (*Conn, error) {
-	connStr := fmt.Sprintf("file:%s", in.FilePath)
+	options := make(url.Values)
+	options.Add("cache", "shared")
+	if in.IsMemoryMode {
+		options.Add("mode", "memory")
+	} else {
+		options.Add("mode", "rwc")
+		options.Add("_journal_mode", "WAL")
+	}
+
+	connStr := fmt.Sprintf("file:%s?%s", in.FilePath, options.Encode())
 
 	db, err := sql.Open("sqlite3", connStr)
 	if err != nil {
@@ -143,6 +161,11 @@ func NewConn(ctx context.Context, in NewConnInput) (*Conn, error) {
 	}
 
 	return conn, nil
+}
+
+func (c *Conn) Vacuum(ctx context.Context) error {
+	_, err := c.ExecContext(ctx, "VACUUM;")
+	return err
 }
 
 func (c *Conn) Close() error {
