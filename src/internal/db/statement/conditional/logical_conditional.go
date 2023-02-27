@@ -35,5 +35,5 @@ func (c *logicalInfixConditional) Generate(provider generator.ArgumentNameProvid
 	}
 	args = append(args, rArgs...)
 
-	return fmt.Sprintf("(%s) %s (%s)", left, c.operator, right), args, nil
+	return fmt.Sprintf("(%s %s %s)", left, c.operator, right), args, nil
 }

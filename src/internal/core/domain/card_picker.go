@@ -6,5 +6,6 @@ type CardPicker struct {
 	CardName        string        `validate:"required,default_card_name=ExpansionName"`
 	CollectorNumber string        `validate:"required"`
 	CardCondition   CardCondition `validate:"required,card_condition"`
+	IsFoil          bool          `validate:"required"`
 	Language        string        `validate:"required"`
 }

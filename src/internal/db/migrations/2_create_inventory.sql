@@ -5,6 +5,7 @@ CREATE TABLE "Inventory" (
   "CollectorNumber" TEXT NOT NULL,
   "IsFoil" INTEGER NOT NULL,
   "Condition" TEXT NOT NULL,
+  "Language" TEXT NOT NULL,
   "CreatedAt" INTEGER NOT NULL
 );
 

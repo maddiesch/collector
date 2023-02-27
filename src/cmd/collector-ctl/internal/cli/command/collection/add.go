@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/maddiesch/collector/cmd/collector-ctl/internal/cli/color"
 	"github.com/maddiesch/collector/cmd/collector-ctl/internal/cli/command/config"
 	"github.com/maddiesch/collector/cmd/collector-ctl/internal/cli/prompt"
@@ -86,6 +86,12 @@ func newAddCommand(config config.Config) *cobra.Command {
 					return err
 				}
 
+				err = p.ProvideCardFoil(cmd.Context(), picker)
+				if err != nil {
+					color.Error.Printf("Failed to select foil status: %s\n", err)
+					return err
+				}
+
 				err = p.ProvideCardCondition(cmd.Context(), picker)
 				if err != nil {
 					color.Error.Printf("Failed to select a condition with error: %s\n", err)
@@ -109,9 +115,20 @@ func newAddCommand(config config.Config) *cobra.Command {
 
 				save, finish := addCardCompleteAction(p)
 				if save {
-					spew.Dump(card)
+					collect := domain.CollectedCard{
+						GroupName:       picker.GroupName,
+						Name:            card.Name,
+						SetName:         card.SetName,
+						CollectorNumber: card.CollectorNumber,
+						IsFoil:          picker.IsFoil,
+						Condition:       picker.CardCondition,
+						Language:        picker.Language,
+						CreatedAt:       time.Now(),
+					}
 
-					fmt.Println("TODO: Save the card")
+					if err := config.DB.InsertCollectedCard(cmd.Context(), collect); err != nil {
+						return err
+					}
 				}
 				if finish {
 					break CardEntryLoop
@@ -134,7 +151,7 @@ func addCardCompleteAction(p *prompt.Prompt) (bool, bool) {
 	saveCont := fmt.Sprintf("%s & %s", addCardSave, addCardContinue)
 	saveFin := fmt.Sprintf("%s & %s", addCardSave, addCardFinish)
 	discardCont := fmt.Sprintf("%s & %s", addCardDiscard, addCardContinue)
-	discardFin := fmt.Sprintf("%s & %s", addCardDiscard, addCardContinue)
+	discardFin := fmt.Sprintf("%s & %s", addCardDiscard, addCardFinish)
 
 	question := &survey.Select{
 		Message: "Next",
