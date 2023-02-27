@@ -7,20 +7,20 @@ import (
 )
 
 func And(left, right Conditional) Conditional {
-	return &joinConditional{left, right, "AND"}
+	return &logicalInfixConditional{left, right, "AND"}
 }
 
 func Or(left, right Conditional) Conditional {
-	return &joinConditional{left, right, "OR"}
+	return &logicalInfixConditional{left, right, "OR"}
 }
 
-type joinConditional struct {
+type logicalInfixConditional struct {
 	left     Conditional
 	right    Conditional
 	operator string
 }
 
-func (c *joinConditional) Generate(provider generator.ArgumentNameProvider) (string, []any, error) {
+func (c *logicalInfixConditional) Generate(provider generator.ArgumentNameProvider) (string, []any, error) {
 	var args []any
 
 	left, lArgs, err := c.left.Generate(provider)
