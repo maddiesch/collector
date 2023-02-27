@@ -27,10 +27,7 @@ func TestInsertBuilder(t *testing.T) {
 	})
 
 	t.Run("insert or replace", func(t *testing.T) {
-		query, args, err := statement.Insert().OrReplace().Into("TestTable").ValueMap(map[string]any{
-			"Name": "MTG",
-			"Age":  30,
-		}).Generate()
+		query, args, err := statement.Insert().OrReplace().Into("TestTable").Value("Name", "MTG").Value("Age", 30).Generate()
 
 		require.NoError(t, err)
 
