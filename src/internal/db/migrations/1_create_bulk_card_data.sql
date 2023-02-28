@@ -1,6 +1,8 @@
 CREATE TABLE "Cache_DefaultCard" (
   "ScryfallID" TEXT NOT NULL UNIQUE,
+  "TCGPlayerID" INTEGER NOT NULL,
   "Name" TEXT NOT NULL,
+  "SetCode" TEXT NOT NULL,
   "SetName" TEXT NOT NULL,
   "CollectorNumber" TEXT NOT NULL,
   "Language" TEXT NOT NULL,
@@ -15,5 +17,6 @@ CREATE TABLE "Cache_DefaultCard" (
   "PriceFoilUSD" INTEGER
 );
 
+CREATE INDEX "Index_Cache_DefaultCard_TCGID" ON "Cache_DefaultCard" ("TCGPlayerID");
 CREATE INDEX "Index_Cache_DefaultCard_Name" ON "Cache_DefaultCard" ("Name");
 CREATE INDEX "Index_Cache_DefaultCard_SetName" ON "Cache_DefaultCard" ("SetName");

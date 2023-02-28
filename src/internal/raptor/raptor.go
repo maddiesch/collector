@@ -6,11 +6,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"sync"
 	"sync/atomic"
 
 	_ "github.com/mattn/go-sqlite3"
-	"go.uber.org/zap"
 )
 
 const (
@@ -30,8 +30,8 @@ func New(source string) (*Conn, error) {
 
 	return &Conn{
 		db:  db,
-		log: zap.NewNop(),
 		id:  atomic.AddUint64(&connID, 1),
+		log: NewNoopQueryLogger(),
 	}, nil
 }
 
@@ -40,7 +40,7 @@ type Conn struct {
 	id  uint64       // Connection id
 	sp  uint64       // Savepoint id
 	db  *sql.DB      // Underlying database connection
-	log *zap.Logger  // Logger instance
+	log QueryLogger  // Log query
 }
 
 // Close the database connection and perform any necessary cleanup
@@ -51,9 +51,14 @@ func (c *Conn) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.log.Sync()
-
 	return c.db.Close()
+}
+
+// SetLogger assigns a logger instance to the connection.
+func (c *Conn) SetLogger(l QueryLogger) {
+	c.mu.Lock()
+	c.log = l
+	c.mu.Unlock()
 }
 
 // Ping verifies a connection to the database is still alive, establishing a connection if necessary.
@@ -61,21 +66,92 @@ func (c *Conn) Ping(ctx context.Context) error {
 	return c.db.PingContext(ctx)
 }
 
-// SetLogger assigns a logger instance to the connection. If you don't want logging, use `zap.NewNop()` (this is also the default)
-func (c *Conn) SetLogger(log *zap.Logger) {
-	c.mu.Lock()
-	c.log = log
-	c.mu.Unlock()
+// QueryLogger provides a standard interface for logging all SQL queries sent to Raptor
+type QueryLogger interface {
+	LogQuery(context.Context, string, ...any)
 }
 
+func NewQueryLogger(w io.Writer) QueryLogger {
+	return &wQueryLogger{w}
+}
+
+type wQueryLogger struct {
+	w io.Writer
+}
+
+func (w *wQueryLogger) LogQuery(_ context.Context, q string, _ ...any) {
+	fmt.Fprintln(w.w, q)
+}
+
+type noopQueryLogger struct{}
+
+func NewNoopQueryLogger() QueryLogger {
+	return &noopQueryLogger{}
+}
+
+func (w *noopQueryLogger) LogQuery(context.Context, string, ...any) {}
+
 // A Result summarizes an executed SQL command.
-type Result sql.Result
+type Result interface {
+	sql.Result
+}
 
 // Rows is the result of a query. See sql.Rows for more information.
-type Rows sql.Rows
+type Rows struct {
+	*sql.Rows
+}
+
+var (
+	ErrNoRows = sql.ErrNoRows
+)
 
 // Row is the result of calling QueryRow to select a single row.
-type Row sql.Row
+type Row struct {
+	rows *sql.Rows
+	err  error
+}
+
+func (r *Row) Scan(dest ...any) error {
+	if r.err != nil {
+		return r.err
+	}
+
+	defer r.rows.Close()
+	for _, dp := range dest {
+		if _, ok := dp.(*sql.RawBytes); ok {
+			return errors.New("raptor: RawBytes isn't allowed on Row.Scan")
+		}
+	}
+
+	if !r.rows.Next() {
+		if err := r.rows.Err(); err != nil {
+			return err
+		}
+		return ErrNoRows
+	}
+	err := r.rows.Scan(dest...)
+	if err != nil {
+		return err
+	}
+	// Make sure the query can be processed to completion with no errors.
+	return r.rows.Close()
+}
+
+func (r *Row) Err() error {
+	return r.err
+}
+
+func (r *Row) Columns() ([]string, error) {
+	if r.err != nil {
+		return nil, r.err
+	}
+	return r.rows.Columns()
+}
+
+type Scanner interface {
+	Scan(...any) error
+	Columns() ([]string, error)
+}
 
 // Executor defines an interface for executing queries that don't return rows.
 type Executor interface {
@@ -89,7 +165,7 @@ func (c *Conn) Exec(ctx context.Context, query string, args ...any) (Result, err
 
 func (c *Conn) exec(ctx context.Context, query string, args ...any) (Result, error) {
 	c.mu.RLock()
-	c.log.Debug("Exec", zap.String("query", query))
+	c.log.LogQuery(ctx, query, args...)
 	c.mu.RUnlock()
 
 	r, err := c.db.ExecContext(ctx, query, args...)
@@ -109,7 +185,7 @@ func (c *Conn) Query(ctx context.Context, query string, args ...any) (*Rows, err
 
 func (c *Conn) query(ctx context.Context, query string, args ...any) (*Rows, error) {
 	c.mu.RLock()
-	c.log.Debug("Query", zap.String("query", query))
+	c.log.LogQuery(ctx, query, args...)
 	c.mu.RUnlock()
 
 	r, err := c.db.QueryContext(ctx, query, args...)
@@ -117,7 +193,7 @@ func (c *Conn) query(ctx context.Context, query string, args ...any) (*Rows, err
 		return nil, err
 	}
 
-	return (*Rows)(r), nil
+	return &Rows{r}, nil
 }
 
 func (c *Conn) QueryRow(ctx context.Context, query string, args ...any) *Row {
@@ -126,12 +202,12 @@ func (c *Conn) QueryRow(ctx context.Context, query string, args ...any) *Row {
 
 func (c *Conn) queryRow(ctx context.Context, query string, args ...any) *Row {
 	c.mu.RLock()
-	c.log.Debug("QueryRow", zap.String("query", query))
+	c.log.LogQuery(ctx, query, args...)
 	c.mu.RUnlock()
 
-	r := c.db.QueryRowContext(ctx, query, args...)
+	r, err := c.db.QueryContext(ctx, query, args...)
 
-	return (*Row)(r)
+	return &Row{rows: r, err: err}
 }
 
 func (c *Conn) newSavepointName() string {
@@ -187,8 +263,11 @@ func (c *Conn) transact(ctx context.Context, fn func(DB) error) error {
 	}()
 
 	if err := fn(txConn); err != nil {
-		if rErr := txConn.rollback(ctx); err != nil {
+		if rErr := txConn.rollback(ctx); rErr != nil {
 			return &TxRollbackError{Underlying: err, Rollback: rErr}
+		}
+		if errors.Is(err, ErrTxRollback) {
+			return nil
 		}
 		return err
 	}
@@ -212,6 +291,8 @@ type txConn struct {
 
 var (
 	ErrTransactionAlreadyStarted = errors.New("transaction already started")
+	ErrTransactionNotRunning     = errors.New("transaction not running")
+	ErrTxRollback                = errors.New("transaction rollback") // Can be returned from a transaction to rollback the transaction. Will not be returned to the caller
 )
 
 func (t *txConn) begin(ctx context.Context) error {
@@ -263,17 +344,45 @@ func (t *txConn) commit(ctx context.Context) error {
 }
 
 func (t *txConn) Exec(ctx context.Context, query string, args ...any) (Result, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.state != txStateRunning {
+		return nil, ErrTransactionNotRunning
+	}
+
 	return t.conn.exec(ctx, query, args...)
 }
 
 func (t *txConn) Transact(ctx context.Context, fn func(DB) error) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.state != txStateRunning {
+		return ErrTransactionNotRunning
+	}
+
 	return t.conn.transact(ctx, fn)
 }
 
 func (t *txConn) Query(ctx context.Context, query string, args ...any) (*Rows, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.state != txStateRunning {
+		return nil, ErrTransactionNotRunning
+	}
+
 	return t.conn.query(ctx, query, args...)
 }
 
 func (t *txConn) QueryRow(ctx context.Context, query string, args ...any) *Row {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.state != txStateRunning {
+		return &Row{rows: nil, err: ErrTransactionNotRunning}
+	}
+
 	return t.conn.queryRow(ctx, query, args...)
 }

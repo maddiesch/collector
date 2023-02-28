@@ -13,15 +13,29 @@ import (
 	"github.com/maddiesch/collector/internal/core/domain"
 	"github.com/maddiesch/collector/internal/service/validate"
 	"github.com/oklog/ulid/v2"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
 
 func newAddCommand(config config.Config) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "add-interactive",
 		Short:   "Add a new card to the collection",
 		Aliases: []string{"add"},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			groupName := ulid.Make().String()
+			if flag, err := cmd.Flags().GetString("group"); err == nil && flag != "" {
+				groupName = flag
+			}
+
+			defaultCondition, err := cmd.Flags().GetString("condition")
+			if err != nil {
+				return err
+			}
+			if !lo.Contains(domain.CardConditionAllString, defaultCondition) {
+				defaultCondition = ""
+			}
+
 			p := &prompt.Prompt{
 				Database: config.DB,
 			}
@@ -39,13 +53,12 @@ func newAddCommand(config config.Config) *cobra.Command {
 				return err
 			}
 
-			groupName := ulid.Make().String()
-
 		CardEntryLoop:
 			for {
 				picker := &domain.CardPicker{
 					GroupName:     groupName,
 					ExpansionName: defaultExpansionName,
+					CardCondition: domain.CardCondition(defaultCondition),
 				}
 
 			RetryCardEntry:
@@ -117,6 +130,7 @@ func newAddCommand(config config.Config) *cobra.Command {
 				if save {
 					collect := domain.CollectedCard{
 						ID:              ulid.Make().String(),
+						ScryfallID:      card.ID,
 						GroupName:       picker.GroupName,
 						Name:            card.Name,
 						SetName:         card.SetName,
@@ -140,6 +154,11 @@ func newAddCommand(config config.Config) *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.PersistentFlags().StringP("group", "g", "", "Set a group name for the imported cards, by default a random name will be generated")
+	cmd.PersistentFlags().StringP("condition", "c", "", "Set a default condition for the imported cards")
+
+	return cmd
 }
 
 const (

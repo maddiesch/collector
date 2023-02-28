@@ -4,6 +4,7 @@ import "time"
 
 type CollectedCard struct {
 	ID              string
+	ScryfallID      string
 	GroupName       string
 	Name            string
 	SetName         string

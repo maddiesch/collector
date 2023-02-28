@@ -25,3 +25,7 @@ bin/collector-ctl: ${GO_FILES} ${SQL_FILES} ${ROOT_DIR}/go.mod ${ROOT_DIR}/go.su
 
 .PHONY: build
 build: bin/collector-ctl
+
+.PHONY: coverage
+coverage: tmp/coverage.out
+	${GOLANG} tool cover -html=tmp/coverage.out

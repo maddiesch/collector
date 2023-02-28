@@ -28,7 +28,7 @@ func GreaterThan(col string, val any) Conditional {
 	return &operatorInfixConditional{col, ">", val}
 }
 
-func GreaterThannEq(col string, val any) Conditional {
+func GreaterThanEq(col string, val any) Conditional {
 	return &operatorInfixConditional{col, ">=", val}
 }
 

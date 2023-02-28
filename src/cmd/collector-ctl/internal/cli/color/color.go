@@ -1,3 +1,4 @@
+// Deprecated: Use the `output` package instead.
 package color
 
 import (
@@ -9,6 +10,8 @@ var (
 	Green  = color.New(color.FgGreen)
 	Yellow = color.New(color.FgYellow)
 
+	// Deprecated: Use the `output` package instead.
 	Error = Red.Add(color.Bold)
-	Warn  = Yellow.Add(color.Underline)
+	// Deprecated: Use the `output` package instead.
+	Warn = Yellow.Add(color.Underline)
 )

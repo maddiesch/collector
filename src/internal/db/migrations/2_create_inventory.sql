@@ -1,5 +1,6 @@
 CREATE TABLE "Inventory" (
   "ID" TEXT PRIMARY KEY NOT NULL UNIQUE,
+  "ScryfallID" TEXT NOT NULL,
   "GroupName" TEXT NOT NULL,
   "Name" TEXT NOT NULL,
   "SetName" TEXT NOT NULL,
@@ -12,6 +13,7 @@ CREATE TABLE "Inventory" (
 );
 
 CREATE INDEX "Index_Inventory_GroupName" ON "Inventory" ("GroupName");
+CREATE INDEX "Index_Inventory_ScryfallID" ON "Inventory" ("ScryfallID");
 CREATE INDEX "Index_Inventory_Name" ON "Inventory" ("Name");
 CREATE INDEX "Index_Inventory_SetName" ON "Inventory" ("SetName");
 CREATE INDEX "Index_Inventory_IsFoil" ON "Inventory" ("IsFoil");

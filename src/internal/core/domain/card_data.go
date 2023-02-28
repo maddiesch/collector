@@ -10,7 +10,9 @@ import (
 
 type CardData struct {
 	ID              string        `json:"id"`
+	TCGPlayerID     int64         `json:"tcgplayer_id"`
 	Name            string        `json:"name"`
+	SetCode         string        `json:"set"`
 	SetName         string        `json:"set_name"`
 	LanguageTag     string        `json:"lang"`
 	CollectorNumber string        `json:"collector_number"`

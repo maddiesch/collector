@@ -13,7 +13,9 @@ import (
 func (d *Database) InsertCardData(ctx context.Context, data domain.CardData) error {
 	stmt := statement.Insert().Into("Cache_DefaultCard").ValueMap(map[string]any{
 		"ScryfallID":      data.ID,
+		"TCGPlayerID":     data.TCGPlayerID,
 		"Name":            data.Name,
+		"SetCode":         data.SetCode,
 		"SetName":         data.SetName,
 		"CollectorNumber": data.CollectorNumber,
 		"Language":        data.LanguageTag,
@@ -62,7 +64,9 @@ func (d *Database) GetCardData(ctx context.Context, cardName, expansionName, col
 
 		results = append(results, domain.CardData{
 			ID:              mapped["ScryfallID"].(string),
+			TCGPlayerID:     mapped["TCGPlayerID"].(int64),
 			Name:            mapped["Name"].(string),
+			SetCode:         mapped["SetCode"].(string),
 			SetName:         mapped["SetName"].(string),
 			LanguageTag:     mapped["Language"].(string),
 			CollectorNumber: mapped["CollectorNumber"].(string),

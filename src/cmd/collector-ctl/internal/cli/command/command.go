@@ -4,6 +4,7 @@ import (
 	"github.com/maddiesch/collector/cmd/collector-ctl/internal/cli/command/cache"
 	"github.com/maddiesch/collector/cmd/collector-ctl/internal/cli/command/collection"
 	"github.com/maddiesch/collector/cmd/collector-ctl/internal/cli/command/config"
+	"github.com/maddiesch/collector/cmd/collector-ctl/internal/cli/command/meta"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +16,7 @@ func NewRootCommand(config config.Config) *cobra.Command {
 	cmd.AddCommand(newVersionCommand())
 	cmd.AddCommand(cache.New(config))
 	cmd.AddCommand(collection.New(config))
+	cmd.AddCommand(meta.New(config))
 
 	return cmd
 }

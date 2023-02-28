@@ -15,7 +15,7 @@ func (d *Database) CollectorNumberForCard(ctx context.Context, cardName, expansi
 			conditional.Equal("Name", cardName),
 			conditional.Equal("SetName", expansionName),
 		),
-	).OrderBy("CollectorNumber", true)
+	).OrderBy("CollectorNumber", false)
 
 	var results []string
 

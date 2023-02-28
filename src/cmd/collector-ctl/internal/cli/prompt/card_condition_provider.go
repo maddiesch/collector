@@ -10,6 +10,9 @@ import (
 )
 
 func (p *Prompt) ProvideCardCondition(_ context.Context, picker *domain.CardPicker) error {
+	if lo.Contains(domain.CardConditionAll, picker.CardCondition) {
+		return nil
+	}
 	question := &survey.Select{
 		Message: "Card Condition",
 		Default: string(domain.CardConditionMint),

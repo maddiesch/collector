@@ -18,6 +18,7 @@ const (
 func (d *Database) InsertCollectedCard(ctx context.Context, card domain.CollectedCard) error {
 	stmt := statement.Insert().Into("Inventory").ValueMap(map[string]any{
 		"ID":              card.ID,
+		"ScryfallID":      card.ScryfallID,
 		"GroupName":       card.GroupName,
 		"Name":            card.Name,
 		"SetName":         card.SetName,
@@ -56,6 +57,7 @@ func (d *Database) GetCollectedCards(ctx context.Context, groupName string) ([]d
 
 		cards = append(cards, domain.CollectedCard{
 			ID:              result["ID"].(string),
+			ScryfallID:      result["ScryfallID"].(string),
 			GroupName:       result["GroupName"].(string),
 			Name:            result["Name"].(string),
 			SetName:         result["SetName"].(string),
