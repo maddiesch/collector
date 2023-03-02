@@ -5,6 +5,7 @@ go 1.20
 require (
 	cloud.google.com/go v0.110.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
+	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/color v1.14.1
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/mattn/go-sqlite3 v1.14.16
@@ -15,12 +16,12 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.2
 	go.uber.org/zap v1.24.0
+	golang.org/x/sync v0.1.0
 	golang.org/x/text v0.7.0
 )
 
 require (
 	github.com/benbjohnson/clock v1.1.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
