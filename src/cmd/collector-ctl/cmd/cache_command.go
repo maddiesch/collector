@@ -12,13 +12,13 @@ const (
 	defaultCardCacheURL = "https://mtgjson.com/api/v5/AllPrintings.sqlite.bz2"
 )
 
-func newCacheCommand() *cobra.Command {
+func newCacheCommand(c config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cache",
 		Short: "Manage the local card cache",
 	}
 
-	cmd.AddCommand(newCacheUpdateCommand(defaultCardCacheURL))
+	cmd.AddCommand(newCacheUpdateCommand(c))
 	cmd.AddCommand(newCacheAgeCommand())
 
 	return cmd
@@ -54,7 +54,7 @@ func newCacheAgeCommand() *cobra.Command {
 	return cmd
 }
 
-func newCacheUpdateCommand(source string) *cobra.Command {
+func newCacheUpdateCommand(c config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update the local card cache",
@@ -67,7 +67,7 @@ func newCacheUpdateCommand(source string) *cobra.Command {
 			return magic.UpdateCardDatabase(cmd.Context(), magic.UpdateCardDatabaseInput{
 				DownloadTask:   new(task.NullTask), // TODO: Report Progress
 				DecompressTask: new(task.NullTask), // TODO: Report Progress
-				SourceURL:      source,
+				SourceURL:      c.SourceURL,
 				FilePath:       run.CardDatabaseLocation(),
 			})
 		},

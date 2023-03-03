@@ -15,37 +15,50 @@ func CompressedCardDatabasePath() string {
 	return filepath.Join(filepath.Dir(file), "card_database.sqlite.bz2")
 }
 
-func CardDatabaseLocation() string {
+func TempDir() string {
+	_, currentFilePath, _, _ := runtime.Caller(0)
+
+	return filepath.Join(filepath.Dir(currentFilePath), "../../../tmp")
+}
+
+func CopyCardDatabase(to string) error {
 	compressedPath := CompressedCardDatabasePath()
 
 	in, err := os.Open(compressedPath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer in.Close()
 
-	dbPath := filepath.Join(filepath.Dir(compressedPath), "../../../tmp", "test_card_database.sqlite")
-	if _, err := os.Stat(dbPath); errors.Is(err, os.ErrNotExist) {
-		if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
-			panic(err)
+	if _, err := os.Stat(to); errors.Is(err, os.ErrNotExist) {
+		if err := os.MkdirAll(filepath.Dir(to), 0755); err != nil {
+			return err
 		}
 
-		out, err := os.OpenFile(dbPath, os.O_CREATE|os.O_WRONLY, 0644)
+		out, err := os.OpenFile(to, os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		defer out.Close()
 
 		if _, err := in.Seek(0, io.SeekStart); err != nil {
-			panic(err)
+			return err
 		}
 
 		if _, err := io.Copy(out, bzip2.NewReader(in)); err != nil {
-			panic(err)
+			return err
 		}
 	} else if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
+}
+
+func CardDatabaseLocation() string {
+	dbPath := filepath.Join(TempDir(), "test_card_database.sqlite")
+
+	CopyCardDatabase(dbPath)
 
 	return dbPath
 }
