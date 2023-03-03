@@ -225,6 +225,15 @@ func TestConn_QueryRow(t *testing.T) {
 		assert.Equal(t, "test", name)
 		assert.Equal(t, 100, age)
 	})
+
+	t.Run("returns expected error for no results", func(t *testing.T) {
+		conn, ctx := createTestConnection(t)
+		defer conn.Close()
+
+		err := conn.QueryRow(ctx, `SELECT * FROM "TestTable" WHERE 1 = 2;`).Scan()
+
+		assert.ErrorIs(t, err, raptor.ErrNoRows)
+	})
 }
 
 func TestNewQueryLogger(t *testing.T) {
