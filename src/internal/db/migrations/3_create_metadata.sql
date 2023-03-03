@@ -1,4 +1,0 @@
-CREATE TABLE "Metadata" (
-  "Key" TEXT PRIMAY KEY NOT NULL UNIQUE,
-  "Value" BLOB NOT NULL
-);

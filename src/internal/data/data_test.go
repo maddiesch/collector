@@ -10,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/maddiesch/collector/internal/data"
+	"github.com/maddiesch/collector/internal/task"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap/zaptest"
 
 	_ "embed"
 )
@@ -34,7 +34,7 @@ func TestDownload(t *testing.T) {
 
 	t.Run("download file", func(t *testing.T) {
 		err := data.Download(context.Background(), data.DownloadInput{
-			Logger:  zaptest.NewLogger(t),
+			Task:    new(task.NullTask),
 			FromURL: server.URL,
 			Dest:    io.Discard,
 		})
@@ -46,7 +46,11 @@ func TestDownload(t *testing.T) {
 func TestInflateCompressedFile(t *testing.T) {
 	var output bytes.Buffer
 
-	err := data.InflateCompressedFile(context.Background(), bytes.NewReader(bzip2ExampleData), &output)
+	err := data.InflateCompressedFile(context.Background(), data.InflateCompressedFileInput{
+		Task: new(task.NullTask),
+		In:   bytes.NewReader(bzip2ExampleData),
+		Out:  &output,
+	})
 
 	require.NoError(t, err)
 

@@ -9,16 +9,22 @@ import (
 	"runtime"
 )
 
-func CardDatabaseLocation() string {
+func CompressedCardDatabasePath() string {
 	_, file, _, _ := runtime.Caller(0)
 
-	in, err := os.Open(filepath.Join(filepath.Dir(file), "card_datatabase.sqlite.bz2"))
+	return filepath.Join(filepath.Dir(file), "card_database.sqlite.bz2")
+}
+
+func CardDatabaseLocation() string {
+	compressedPath := CompressedCardDatabasePath()
+
+	in, err := os.Open(compressedPath)
 	if err != nil {
 		panic(err)
 	}
 	defer in.Close()
 
-	dbPath := filepath.Join(filepath.Dir(file), "../../../tmp", "test_card_database.sqlite")
+	dbPath := filepath.Join(filepath.Dir(compressedPath), "../../../tmp", "test_card_database.sqlite")
 	if _, err := os.Stat(dbPath); errors.Is(err, os.ErrNotExist) {
 		if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
 			panic(err)
